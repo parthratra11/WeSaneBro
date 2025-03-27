@@ -1,0 +1,51 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-chakra-petch);
+  }
+
+  body {
+    font-family: var(--font-inter);
+  }
+}
+
+@layer utilities {
+  .gradient-text {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-cyber-blue via-cyber-purple to-cyber-pink;
+  }
+
+  .gradient-text-hero {
+    @apply bg-clip-text text-transparent bg-gradient-to-b from-white via-white/90 to-white/70;
+  }
+
+  .cyber-border {
+    @apply border-2 border-cyber-blue shadow-[0_0_15px_rgba(0,255,159,0.5)];
+  }
+
+  .cyber-bg {
+    @apply bg-gradient-to-br from-gray-900 via-gray-800 to-black;
+  }
+
+  .cyber-grid {
+    background-image: linear-gradient(
+        rgba(0, 255, 159, 0.1) 1px,
+        transparent 1px
+      ),
+      linear-gradient(90deg, rgba(0, 255, 159, 0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+
+  .heading-blur {
+    text-shadow: 0 0 80px rgb(192 219 255 / 48%), 0 0 32px rgb(65 120 255 / 24%);
+  }
+
+  .text-glow {
+    text-shadow: 0 0 20px rgb(255 255 255 / 50%);
+  }
+}
