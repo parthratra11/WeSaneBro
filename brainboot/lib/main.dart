@@ -1,298 +1,122 @@
 import 'package:flutter/material.dart';
-import 'screens/community_screen.dart';
-import 'screens/brain_bot_screen.dart';
 
 void main() {
-  runApp(const BrainBootApp());
+  runApp(const MyApp());
 }
 
-class BrainBootApp extends StatelessWidget {
-  const BrainBootApp({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
+  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'BrainBoot',
+      title: 'Flutter Demo',
       theme: ThemeData(
-        primaryColor: Color(0xFF5B4DA7),
-        scaffoldBackgroundColor: Color(0xFFF5F3FF),
-        colorScheme: ColorScheme.light(
-          primary: Color(0xFF5B4DA7),
-          secondary: Color(0xFF9C27B0),
-          surface: Color(0xFFF5F3FF),
-          tertiary: Color(0xFF2E7D32),
-          error: Color(0xFFD32F2F),
-        ),
-        textTheme: TextTheme(
-          headlineLarge: TextStyle(
-            fontSize: 32,
-            fontWeight: FontWeight.bold,
-            height: 1.3,
-            letterSpacing: -0.5,
-          ),
-          headlineMedium: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.w600,
-            height: 1.3,
-          ),
-          bodyLarge: TextStyle(fontSize: 16, height: 1.5, letterSpacing: 0.15),
-        ),
-        bottomNavigationBarTheme: BottomNavigationBarThemeData(
-          selectedItemColor: Color(0xFF5B4DA7),
-          unselectedItemColor: Colors.grey[600],
-          type: BottomNavigationBarType.fixed,
-          selectedLabelStyle: TextStyle(fontWeight: FontWeight.w600),
-        ),
-        cardTheme: CardTheme(
-          elevation: 4,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15),
-          ),
-        ),
+        // This is the theme of your application.
+        //
+        // TRY THIS: Try running your application with "flutter run". You'll see
+        // the application has a purple toolbar. Then, without quitting the app,
+        // try changing the seedColor in the colorScheme below to Colors.green
+        // and then invoke "hot reload" (save your changes or press the "hot
+        // reload" button in a Flutter-supported IDE, or press "r" if you used
+        // the command line to start the app).
+        //
+        // Notice that the counter didn't reset back to zero; the application
+        // state is not lost during the reload. To reset the state, use hot
+        // restart instead.
+        //
+        // This works for code too, not just values: Most code changes can be
+        // tested with just a hot reload.
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const HomePage(),
+      home: const MyHomePage(title: 'Flutter Demo Home Page'),
     );
   }
 }
 
-class HomePage extends StatelessWidget {
-  const HomePage({super.key});
+class MyHomePage extends StatefulWidget {
+  const MyHomePage({super.key, required this.title});
 
-  void _handleMoodSelection(BuildContext context, String mood) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('You are feeling $mood')));
-  }
+  // This widget is the home page of your application. It is stateful, meaning
+  // that it has a State object (defined below) that contains fields that affect
+  // how it looks.
 
-  void _handleQuickAction(BuildContext context, String action) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('Opening $action')));
+  // This class is the configuration for the state. It holds the values (in this
+  // case the title) provided by the parent (in this case the App widget) and
+  // used by the build method of the State. Fields in a Widget subclass are
+  // always marked "final".
+
+  final String title;
+
+  @override
+  State<MyHomePage> createState() => _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> {
+  int _counter = 0;
+
+  void _incrementCounter() {
+    setState(() {
+      // This call to setState tells the Flutter framework that something has
+      // changed in this State, which causes it to rerun the build method below
+      // so that the display can reflect the updated values. If we changed
+      // _counter without calling setState(), then the build method would not be
+      // called again, and so nothing would appear to happen.
+      _counter++;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    // This method is rerun every time setState is called, for instance as done
+    // by the _incrementCounter method above.
+    //
+    // The Flutter framework has been optimized to make rerunning build methods
+    // fast, so that you can just rebuild anything that needs updating rather
+    // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          'BrainBoot',
-          style: Theme.of(context).textTheme.headlineMedium,
-        ),
-        elevation: 0,
-        actions: [
-          IconButton(icon: Icon(Icons.settings), onPressed: () {}),
-          IconButton(icon: Icon(Icons.person), onPressed: () {}),
-        ],
+        // TRY THIS: Try changing the color here to a specific color (to
+        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
+        // change color while the other colors stay the same.
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        // Here we take the value from the MyHomePage object that was created by
+        // the App.build method, and use it to set our appbar title.
+        title: Text(widget.title),
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildWelcomeSection(context),
-              SizedBox(height: 20),
-              _buildQuickActions(context),
-              SizedBox(height: 20),
-              _buildUpcomingSection(context),
-            ],
-          ),
-        ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          showDialog(
-            context: context,
-            builder:
-                (context) => AlertDialog(
-                  title: Text('SOS Activated'),
-                  content: Text(
-                    'Emergency contacts will be notified. Do you want to proceed?',
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: Text('Cancel'),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Emergency contacts notified'),
-                          ),
-                        );
-                      },
-                      child: Text('Confirm'),
-                    ),
-                  ],
-                ),
-          );
-        },
-        label: Text('SOS'),
-        icon: Icon(Icons.emergency),
-        backgroundColor: Theme.of(context).colorScheme.error,
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.chat), label: 'BrainBot'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_month),
-            label: 'Schedule',
-          ),
-        ],
-        currentIndex: 0,
-        onTap: (index) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Navigating to ${['Home', 'BrainBot', 'Schedule'][index]}',
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildWelcomeSection(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: EdgeInsets.all(16),
+      body: Center(
+        // Center is a layout widget. It takes a single child and positions it
+        // in the middle of the parent.
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+          // Column is also a layout widget. It takes a list of children and
+          // arranges them vertically. By default, it sizes itself to fit its
+          // children horizontally, and tries to be as tall as its parent.
+          //
+          // Column has various properties to control how it sizes itself and
+          // how it positions its children. Here we use mainAxisAlignment to
+          // center the children vertically; the main axis here is the vertical
+          // axis because Columns are vertical (the cross axis would be
+          // horizontal).
+          //
+          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
+          // action in the IDE, or press "p" in the console), to see the
+          // wireframe for each widget.
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            const Text('You have pushed the button this many times:'),
             Text(
-              'Welcome Back, Alex',
-              style: Theme.of(context).textTheme.headlineLarge,
-            ),
-            SizedBox(height: 8),
-            Text(
-              'How are you feeling today?',
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
-            SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildMoodButton(context, '😊', 'Great'),
-                _buildMoodButton(context, '😐', 'Okay'),
-                _buildMoodButton(context, '😔', 'Low'),
-                _buildMoodButton(context, '😰', 'Anxious'),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildQuickActions(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Quick Actions',
-          style: Theme.of(context).textTheme.headlineMedium,
-        ),
-        SizedBox(height: 16),
-        GridView.count(
-          shrinkWrap: true,
-          physics: NeverScrollableScrollPhysics(),
-          crossAxisCount: 2,
-          mainAxisSpacing: 10,
-          crossAxisSpacing: 10,
-          children: [
-            _buildActionCard(context, 'Therapy\nSessions', Icons.psychology),
-            _buildActionCard(context, 'Medication\nTracker', Icons.medication),
-            _buildActionCard(context, 'Learn\n& Grow', Icons.school),
-            _buildActionCard(context, 'Job\nSearch', Icons.work),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildUpcomingSection(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Today\'s Schedule',
+              '$_counter',
               style: Theme.of(context).textTheme.headlineMedium,
             ),
-            SizedBox(height: 16),
-            _buildScheduleItem(context, '10:00 AM', 'Therapy Session'),
-            _buildScheduleItem(context, '02:00 PM', 'Job Interview'),
-            _buildScheduleItem(context, '05:00 PM', 'Medication Reminder'),
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildMoodButton(BuildContext context, String emoji, String label) {
-    return Column(
-      children: [
-        TextButton(
-          onPressed: () => _handleMoodSelection(context, label),
-          style: TextButton.styleFrom(
-            padding: EdgeInsets.all(12),
-            shape: CircleBorder(),
-          ),
-          child: Text(emoji, style: TextStyle(fontSize: 32)),
-        ),
-        Text(label, style: Theme.of(context).textTheme.bodyLarge),
-      ],
-    );
-  }
-
-  Widget _buildActionCard(BuildContext context, String title, IconData icon) {
-    return Card(
-      child: InkWell(
-        onTap: () => _handleQuickAction(context, title.replaceAll('\n', ' ')),
-        borderRadius: BorderRadius.circular(15),
-        child: Padding(
-          padding: EdgeInsets.all(16),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 32, color: Theme.of(context).primaryColor),
-              SizedBox(height: 8),
-              Text(
-                title,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildScheduleItem(
-    BuildContext context,
-    String time,
-    String activity,
-  ) {
-    return InkWell(
-      onTap: () => _handleQuickAction(context, '$time - $activity'),
-      child: Padding(
-        padding: EdgeInsets.symmetric(vertical: 8),
-        child: Row(
-          children: [
-            Text(time, style: TextStyle(fontWeight: FontWeight.bold)),
-            SizedBox(width: 16),
-            Text(activity),
-          ],
-        ),
-      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _incrementCounter,
+        tooltip: 'Increment',
+        child: const Icon(Icons.add),
+      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
