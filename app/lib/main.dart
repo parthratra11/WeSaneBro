@@ -30,7 +30,7 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'BrainBoot',
+      title: 'KibOS',
       theme: ThemeData(
         primaryColor: const Color(0xFF7C4DFF),
         scaffoldBackgroundColor:
@@ -76,7 +76,7 @@ class _MyAppState extends State<MyApp> {
       ),
       home: Scaffold(
         appBar: AppBar(
-          title: const Text('BrainBoot'),
+          title: const Text('KibOS'),
           actions: [
             IconButton(
               icon: const Icon(Icons.sos),
@@ -95,7 +95,7 @@ class _MyAppState extends State<MyApp> {
               const DrawerHeader(
                 decoration: BoxDecoration(color: Color(0xFF7C4DFF)),
                 child: Text(
-                  'BrainBoot Menu',
+                  'KibOS Menu',
                   style: TextStyle(color: Colors.white, fontSize: 24),
                 ),
               ),
@@ -172,7 +172,7 @@ class _MyAppState extends State<MyApp> {
               ),
               ListTile(
                 leading: const Icon(Icons.chat),
-                title: const Text('BrainBot AI Assistant'),
+                title: const Text('Kibo AI Assistant'),
                 onTap: () {},
               ),
             ],
@@ -199,10 +199,7 @@ class _MyAppState extends State<MyApp> {
               icon: Icon(Icons.calendar_today),
               label: 'Schedule',
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.smart_toy),
-              label: 'BrainBot',
-            ),
+            BottomNavigationBarItem(icon: Icon(Icons.smart_toy), label: 'Kibo'),
           ],
         ),
         floatingActionButton: FloatingActionButton(
@@ -301,7 +298,7 @@ class _MyAppState extends State<MyApp> {
                             const Icon(Icons.smart_toy),
                             const SizedBox(width: 8),
                             const Text(
-                              'BrainBot Assistant',
+                              'Kibo Assistant',
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -889,7 +886,7 @@ class ProfessionalCard extends StatelessWidget {
                 ListTile(
                   leading: Icon(Icons.email),
                   title: Text(
-                    'Email: ${name.toLowerCase().replaceAll(' ', '.')}@brainboot.com',
+                    'Email: ${name.toLowerCase().replaceAll(' ', '.')}@wesanebro.com',
                   ),
                 ),
                 ListTile(
