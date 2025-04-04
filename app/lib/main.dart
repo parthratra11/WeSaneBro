@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
 import 'dart:ui' show lerpDouble;
+import 'package:video_player/video_player.dart';
+import 'package:flutter/services.dart';
 
 void main() {
   runApp(const MyApp());
@@ -202,20 +204,27 @@ class _MyAppState extends State<MyApp> {
             BottomNavigationBarItem(icon: Icon(Icons.smart_toy), label: 'Kibo'),
           ],
         ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () => _showChatBot(),
-          child: Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                colors: [
-                  Theme.of(context).colorScheme.primary,
-                  Theme.of(context).colorScheme.secondary,
-                ],
-              ),
+        floatingActionButton: Container(
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: LinearGradient(
+              colors: [
+                Theme.of(context).colorScheme.primary,
+                Theme.of(context).colorScheme.secondary,
+              ],
             ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: FloatingActionButton(
+            onPressed: () => _showChatBot(),
+            elevation: 0,
+            backgroundColor: Colors.transparent,
             child: const Icon(Icons.chat_bubble, color: Colors.white),
           ),
         ),
@@ -491,7 +500,7 @@ class TasksSection extends StatelessWidget {
   }
 }
 
-class TaskItem extends StatelessWidget {
+class TaskItem extends StatefulWidget {
   final String title;
   final String time;
   final bool isCompleted;
@@ -504,36 +513,77 @@ class TaskItem extends StatelessWidget {
   });
 
   @override
+  State<TaskItem> createState() => _TaskItemState();
+}
+
+class _TaskItemState extends State<TaskItem> {
+  late bool isCompleted;
+
+  @override
+  void initState() {
+    super.initState();
+    isCompleted = widget.isCompleted;
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 0),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color:
-                isCompleted
-                    ? Colors.green.withOpacity(0.1)
-                    : Colors.grey.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        onTap: () => setState(() => isCompleted = !isCompleted),
+        child: ListTile(
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 8,
           ),
-          child: Icon(
-            isCompleted ? Icons.check_circle : Icons.circle_outlined,
-            color: isCompleted ? Colors.green : Colors.grey,
+          leading: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color:
+                  isCompleted
+                      ? Colors.green.withOpacity(0.1)
+                      : Colors.grey.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              isCompleted ? Icons.check_circle : Icons.circle_outlined,
+              color: isCompleted ? Colors.green : Colors.grey,
+            ),
           ),
-        ),
-        title: Text(
-          title,
-          style: TextStyle(
-            decoration: isCompleted ? TextDecoration.lineThrough : null,
-            color: isCompleted ? Colors.grey : null,
+          title: Text(
+            widget.title,
+            style: TextStyle(
+              decoration: isCompleted ? TextDecoration.lineThrough : null,
+              color: isCompleted ? Colors.grey : null,
+            ),
           ),
-        ),
-        subtitle: Text(time),
-        trailing: IconButton(
-          icon: const Icon(Icons.more_vert),
-          onPressed: () {},
+          subtitle: Text(widget.time),
+          trailing: PopupMenuButton(
+            icon: const Icon(Icons.more_vert),
+            itemBuilder:
+                (context) => [
+                  PopupMenuItem(
+                    child: ListTile(
+                      leading: const Icon(Icons.edit),
+                      title: const Text('Edit'),
+                      dense: true,
+                    ),
+                    onTap: () {
+                      /* Edit functionality */
+                    },
+                  ),
+                  PopupMenuItem(
+                    child: ListTile(
+                      leading: const Icon(Icons.delete),
+                      title: const Text('Delete'),
+                      dense: true,
+                    ),
+                    onTap: () {
+                      /* Delete functionality */
+                    },
+                  ),
+                ],
+          ),
         ),
       ),
     );
@@ -664,11 +714,34 @@ class ResourceCard extends StatelessWidget {
     super.key,
   });
 
+  void _handleNavigation(BuildContext context) {
+    switch (title) {
+      case 'Educational':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const EducationScreen()),
+        );
+        break;
+      case 'Employment':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const EmploymentScreen()),
+        );
+        break;
+      case 'Community':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const CommunityScreen()),
+        );
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Card(
       child: InkWell(
-        onTap: () {},
+        onTap: () => _handleNavigation(context),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -1166,118 +1239,169 @@ class BrainBotScreen extends StatefulWidget {
   State<BrainBotScreen> createState() => _BrainBotScreenState();
 }
 
-class _BrainBotScreenState extends State<BrainBotScreen>
-    with SingleTickerProviderStateMixin {
+class _BrainBotScreenState extends State<BrainBotScreen> {
   bool _isPoweredOn = false;
-  late AnimationController _eyeController;
-  late Point _targetPoint;
-  Point _currentEyePosition = const Point(0.5, 0.5);
-  final Random _random = Random();
+  late VideoPlayerController _videoController;
 
   @override
   void initState() {
     super.initState();
-    _targetPoint = _getRandomPoint();
-    _eyeController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    )..addListener(() {
-      setState(() {
-        _currentEyePosition = Point(
-          lerpDouble(_currentEyePosition.x, _targetPoint.x, 0.02) ?? 0.5,
-          lerpDouble(_currentEyePosition.y, _targetPoint.y, 0.02) ?? 0.5,
-        );
-      });
-      if (_eyeController.value >= 1.0) {
-        _targetPoint = _getRandomPoint();
-        _eyeController.reset();
-        _eyeController.forward();
-      }
-    });
-  }
-
-  Point _getRandomPoint() {
-    return Point(
-      0.2 + _random.nextDouble() * 0.6,
-      0.2 + _random.nextDouble() * 0.6,
-    );
+    _videoController =
+        VideoPlayerController.asset('assets/videos/kibos.mp4')
+          ..initialize().then((_) {
+            setState(() {});
+          })
+          ..setLooping(true);
   }
 
   @override
   void dispose() {
-    _eyeController.dispose();
+    _videoController.dispose();
+    _resetOrientation();
     super.dispose();
   }
 
-  void _togglePower() {
+  Future<void> _enterFullScreen() async {
+    await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    await SystemChrome.setPreferredOrientations([
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
+  }
+
+  void _resetOrientation() {
+    SystemChrome.setPreferredOrientations(DeviceOrientation.values);
+    SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.manual,
+      overlays: SystemUiOverlay.values,
+    );
+  }
+
+  void _togglePower() async {
+    if (!_isPoweredOn) {
+      await _enterFullScreen();
+    } else {
+      _resetOrientation();
+    }
+
     setState(() {
       _isPoweredOn = !_isPoweredOn;
       if (_isPoweredOn) {
-        _eyeController.forward();
+        _videoController.play();
       } else {
-        _eyeController.stop();
+        _videoController.pause();
       }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        if (!_isPoweredOn) ...[
-          Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ElevatedButton(
-                  onPressed: _togglePower,
-                  style: ElevatedButton.styleFrom(
-                    shape: const CircleBorder(),
-                    padding: const EdgeInsets.all(48),
-                    backgroundColor: Theme.of(context).primaryColor,
-                  ),
-                  child: const Icon(
-                    Icons.power_settings_new,
-                    size: 64,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 32),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+    if (_isPoweredOn) {
+      return WillPopScope(
+        onWillPop: () async {
+          _togglePower();
+          return false;
+        },
+        child: Scaffold(
+          backgroundColor: Colors.black,
+          body: Stack(
+            children: [
+              Positioned.fill(
+                child:
+                    _videoController.value.isInitialized
+                        ? SizedBox.expand(
+                          child: FittedBox(
+                            fit: BoxFit.cover,
+                            child: SizedBox(
+                              width: _videoController.value.size.width,
+                              height: _videoController.value.size.height,
+                              child: VideoPlayer(_videoController),
+                            ),
+                          ),
+                        )
+                        : const Center(child: CircularProgressIndicator()),
+              ),
+              Positioned(
+                top: 16,
+                right: 16,
+                child: Row(
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.settings, size: 32),
-                      iconSize: 32,
+                      icon: const Icon(
+                        Icons.settings,
+                        size: 32,
+                        color: Colors.white,
+                      ),
                       onPressed: () {},
                       tooltip: 'Settings',
-                      padding: const EdgeInsets.all(16),
                     ),
-                    const SizedBox(width: 32),
                     IconButton(
-                      icon: const Icon(Icons.info_outline, size: 32),
-                      iconSize: 32,
+                      icon: const Icon(
+                        Icons.info_outline,
+                        size: 32,
+                        color: Colors.white,
+                      ),
                       onPressed: () {},
                       tooltip: 'Info',
-                      padding: const EdgeInsets.all(16),
+                    ),
+                    IconButton(
+                      icon: const Icon(
+                        Icons.power_settings_new,
+                        color: Colors.white,
+                        size: 32,
+                      ),
+                      onPressed: _togglePower,
                     ),
                   ],
                 ),
-              ],
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Return power button UI with additional buttons
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          ElevatedButton(
+            onPressed: _togglePower,
+            style: ElevatedButton.styleFrom(
+              shape: const CircleBorder(),
+              padding: const EdgeInsets.all(48),
+              backgroundColor: Theme.of(context).primaryColor,
             ),
+            child: const Icon(
+              Icons.power_settings_new,
+              size: 64,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 32),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.settings, size: 32),
+                iconSize: 32,
+                onPressed: () {},
+                tooltip: 'Settings',
+                padding: const EdgeInsets.all(16),
+              ),
+              const SizedBox(width: 32),
+              IconButton(
+                icon: const Icon(Icons.info_outline, size: 32),
+                iconSize: 32,
+                onPressed: () {},
+                tooltip: 'Info',
+                padding: const EdgeInsets.all(16),
+              ),
+            ],
           ),
         ],
-        if (_isPoweredOn)
-          Container(
-            color: Colors.black,
-            child: Center(
-              child: PixelatedEyes(
-                position: _currentEyePosition,
-                color: Colors.cyan,
-              ),
-            ),
-          ),
-      ],
+      ),
     );
   }
 }
@@ -1658,6 +1782,132 @@ class EducationalResourcesScreen extends StatelessWidget {
         title: Text(title),
         subtitle: Text(description),
         trailing: const Icon(Icons.arrow_forward),
+        onTap: () {},
+      ),
+    );
+  }
+}
+
+class EducationScreen extends StatelessWidget {
+  const EducationScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Educational Resources')),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          _buildCourseCard(
+            'Introduction to Neurodiversity',
+            'Learn about different types of neurodiversity',
+            '2 hours',
+            4.5,
+          ),
+          _buildCourseCard(
+            'Workplace Strategies',
+            'Effective strategies for workplace success',
+            '1.5 hours',
+            4.8,
+          ),
+          _buildCourseCard(
+            'Social Skills Development',
+            'Improve social interaction skills',
+            '3 hours',
+            4.6,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCourseCard(
+    String title,
+    String description,
+    String duration,
+    double rating,
+  ) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: ListTile(
+        contentPadding: const EdgeInsets.all(16),
+        title: Text(title),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 8),
+            Text(description),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                const Icon(Icons.access_time, size: 16),
+                const SizedBox(width: 4),
+                Text(duration),
+                const Spacer(),
+                const Icon(Icons.star, size: 16, color: Colors.amber),
+                const SizedBox(width: 4),
+                Text(rating.toString()),
+              ],
+            ),
+          ],
+        ),
+        trailing: ElevatedButton(onPressed: () {}, child: const Text('Start')),
+      ),
+    );
+  }
+}
+
+class EmploymentScreen extends StatelessWidget {
+  const EmploymentScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Employment Resources')),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          _buildJobCategory('Tech & IT', Icons.computer, 42),
+          _buildJobCategory('Healthcare', Icons.local_hospital, 28),
+          _buildJobCategory('Education', Icons.school, 15),
+          _buildJobCategory('Creative Arts', Icons.palette, 23),
+          const SizedBox(height: 24),
+          const Text(
+            'Career Resources',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 16),
+          _buildResourceCard('Resume Building Workshop', Icons.description),
+          _buildResourceCard('Interview Preparation', Icons.people),
+          _buildResourceCard(
+            'Workplace Accommodations Guide',
+            Icons.accessibility_new,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildJobCategory(String title, IconData icon, int jobCount) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: ListTile(
+        leading: Icon(icon, size: 32),
+        title: Text(title),
+        subtitle: Text('$jobCount jobs available'),
+        trailing: const Icon(Icons.arrow_forward_ios),
+        onTap: () {},
+      ),
+    );
+  }
+
+  Widget _buildResourceCard(String title, IconData icon) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: ListTile(
+        leading: Icon(icon),
+        title: Text(title),
+        trailing: const Icon(Icons.arrow_forward_ios),
         onTap: () {},
       ),
     );
