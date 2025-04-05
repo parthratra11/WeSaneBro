@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
+import 'dart:async'; // Add this import for Timer
 import 'dart:ui' show lerpDouble;
 import 'package:video_player/video_player.dart';
 import 'package:flutter/services.dart';
@@ -233,7 +234,7 @@ class _MyAppState extends State<MyApp> {
   }
 
   void _handleSOS() {
-    // Implement SOS functionality
+    _showEmergencyOptions();
   }
 
   void _toggleTheme() {
@@ -373,6 +374,42 @@ class _MyAppState extends State<MyApp> {
           ),
     );
   }
+
+  void _showEmergencyOptions() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Emergency Options'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.local_police),
+                  title: const Text('Call Police'),
+                  onTap: () {
+                    // Implement police call
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.local_hospital),
+                  title: const Text('Nearby Hospitals'),
+                  onTap: () {
+                    // Implement hospital search
+                  },
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Close'),
+              ),
+            ],
+          ),
+    );
+  }
 }
 
 // Home Screen Widgets
@@ -396,71 +433,215 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-class WelcomeCard extends StatelessWidget {
+class WelcomeCard extends StatefulWidget {
   const WelcomeCard({super.key});
+
+  @override
+  State<WelcomeCard> createState() => _WelcomeCardState();
+}
+
+class _WelcomeCardState extends State<WelcomeCard> {
+  bool _isRecording = false;
+  int _recordingSeconds = 0;
+  Timer? _timer;
+
+  void _startRecording() {
+    setState(() {
+      _isRecording = true;
+      _recordingSeconds = 30;
+    });
+
+    _showEmergencyOptions(context); // Show emergency options immediately
+
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      setState(() {
+        if (_recordingSeconds > 0) {
+          _recordingSeconds--;
+        } else {
+          _stopRecording();
+        }
+      });
+    });
+  }
+
+  void _stopRecording() {
+    _timer?.cancel();
+    setState(() {
+      _isRecording = false;
+    });
+  }
+
+  void _showEmergencyOptions(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Prevent dismissing by tapping outside
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Emergency Options'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (_isRecording)
+                  Text('Recording: $_recordingSeconds seconds remaining'),
+                const SizedBox(height: 8),
+                ListTile(
+                  leading: const Icon(Icons.local_police),
+                  title: const Text('Call Police'),
+                  onTap: () {
+                    // Implement police call
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.local_hospital),
+                  title: const Text('Nearby Hospitals'),
+                  onTap: () {
+                    // Implement hospital search
+                  },
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  _stopRecording();
+                  Navigator.pop(context);
+                },
+                child: const Text('Stop & Close'),
+              ),
+            ],
+          ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          gradient: LinearGradient(
-            colors: [
-              Theme.of(context).colorScheme.primary,
-              Theme.of(context).colorScheme.secondary,
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Welcome back!',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
+      child: Row(
+        children: [
+          Expanded(
+            flex: 65, // Increased from 60
+            child: Container(
+              height: 160, // Added fixed height
+              decoration: BoxDecoration(
+                borderRadius: const BorderRadius.horizontal(
+                  left: Radius.circular(16),
+                ),
+                gradient: LinearGradient(
+                  colors: [
+                    Theme.of(context).colorScheme.primary,
+                    Theme.of(context).colorScheme.secondary,
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
               ),
-              const SizedBox(height: 8),
-              Text(
-                'Your daily progress is on track.',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Colors.white.withOpacity(0.9),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Stack(
-                alignment: Alignment.center,
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: LinearProgressIndicator(
-                      value: 0.7,
-                      minHeight: 8,
-                      backgroundColor: Colors.white.withOpacity(0.2),
-                      valueColor: const AlwaysStoppedAnimation<Color>(
-                        Colors.white,
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Welcome back!',
+                      style: Theme.of(
+                        context,
+                      ).textTheme.headlineSmall?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                  ),
-                  Text(
-                    '70%',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
+                    const SizedBox(height: 8),
+                    Text(
+                      'Your daily progress is on track.',
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: Colors.white.withOpacity(0.9),
+                      ),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 12),
+                    Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: LinearProgressIndicator(
+                            value: 0.7,
+                            minHeight: 12,
+                            backgroundColor: Colors.white.withOpacity(0.2),
+                            valueColor: const AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
+                          ),
+                        ),
+                        const Text(
+                          '70%',
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ],
+            ),
           ),
-        ),
+          Expanded(
+            flex: 35, // Decreased from 40
+            child: Container(
+              height: 160, // Changed from 180
+              decoration: BoxDecoration(
+                color: Colors.red.shade700,
+                borderRadius: const BorderRadius.horizontal(
+                  right: Radius.circular(16),
+                ),
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: _isRecording ? null : _startRecording,
+                  borderRadius: const BorderRadius.horizontal(
+                    right: Radius.circular(16),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        _isRecording
+                            ? Icons.fiber_manual_record
+                            : Icons.warning_rounded,
+                        color: Colors.white,
+                        size: 48,
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        _isRecording ? '$_recordingSeconds s' : 'SOS',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      if (_isRecording) ...[
+                        const SizedBox(height: 6),
+                        const Text(
+                          'Recording...',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -900,165 +1081,169 @@ class CommunityScreen extends StatelessWidget {
   }
 
   Widget _buildEventsList() {
+    final events = [
+      {
+        'title': 'Neurodiversity Career Fair',
+        'date': DateTime.now().add(const Duration(days: 2)),
+        'location': 'City Convention Center',
+        'attendees': 45,
+        'description':
+            'Connect with employers who value neurodiversity in the workplace. Meet recruiters from tech, healthcare, and creative industries.',
+        'time': '10:00 AM - 4:00 PM',
+        'organizer': 'WeSaneBro Foundation',
+        'requirements': 'Bring your resume and portfolio',
+        'contact': 'events@wesanebro.org',
+      },
+      {
+        'title': 'Sensory-Friendly Movie Night',
+        'date': DateTime.now().add(const Duration(days: 4)),
+        'location': 'Inclusive Cinema Hall',
+        'attendees': 30,
+        'description':
+            'Enjoy a movie screening in a sensory-friendly environment with adjusted sound and lighting.',
+        'time': '6:30 PM - 9:00 PM',
+        'organizer': 'Community Arts Group',
+        'requirements': 'Comfortable seating provided',
+        'contact': 'cinema@wesanebro.org',
+      },
+      {
+        'title': 'Skills Development Workshop',
+        'date': DateTime.now().add(const Duration(days: 6)),
+        'location': 'Learning Center',
+        'attendees': 25,
+        'description':
+            'Interactive workshop focusing on communication skills and workplace strategies.',
+        'time': '2:00 PM - 5:00 PM',
+        'organizer': 'Skills Development Team',
+        'requirements': 'Notebook and writing materials',
+        'contact': 'workshops@wesanebro.org',
+      },
+      {
+        'title': 'Support Group Meeting',
+        'date': DateTime.now().add(const Duration(days: 8)),
+        'location': 'Community Center',
+        'attendees': 20,
+        'description':
+            'Monthly support group meeting for sharing experiences and coping strategies.',
+        'time': '7:00 PM - 8:30 PM',
+        'organizer': 'Support Network',
+        'requirements': 'Open to all members',
+        'contact': 'support@wesanebro.org',
+      },
+      {
+        'title': 'Tech Networking Mixer',
+        'date': DateTime.now().add(const Duration(days: 10)),
+        'location': 'Tech Hub',
+        'attendees': 35,
+        'description':
+            'Casual networking event for tech professionals and enthusiasts.',
+        'time': '5:30 PM - 7:30 PM',
+        'organizer': 'Tech Community',
+        'requirements': 'Business casual attire',
+        'contact': 'tech@wesanebro.org',
+      },
+    ];
+
     return ListView.builder(
-      itemCount: 5,
+      itemCount: events.length,
       itemBuilder: (context, index) {
-        return EventCard(
-          title: 'Neurodiversity Meetup ${index + 1}',
-          date: DateTime.now().add(Duration(days: index * 2)),
-          location: 'Community Center',
-          attendees: 15 + index,
+        final event = events[index];
+        return Card(
+          margin: const EdgeInsets.all(8.0),
+          child: ExpansionTile(
+            title: Text(event['title'] as String),
+            subtitle: Text(
+              '${event['location']} • ${(event['attendees'] as int).toString()} attending',
+            ),
+            trailing: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  (event['date'] as DateTime).day.toString(),
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text(_getMonthName((event['date'] as DateTime).month)),
+              ],
+            ),
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Details',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 8),
+                    _buildDetailRow(Icons.access_time, event['time'] as String),
+                    _buildDetailRow(
+                      Icons.description,
+                      event['description'] as String,
+                    ),
+                    _buildDetailRow(
+                      Icons.person,
+                      'Organizer: ${event['organizer']}',
+                    ),
+                    _buildDetailRow(
+                      Icons.list,
+                      'Requirements: ${event['requirements']}',
+                    ),
+                    _buildDetailRow(Icons.email, event['contact'] as String),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        ElevatedButton.icon(
+                          icon: const Icon(Icons.calendar_today),
+                          label: const Text('RSVP'),
+                          onPressed: () {},
+                        ),
+                        OutlinedButton.icon(
+                          icon: const Icon(Icons.share),
+                          label: const Text('Share'),
+                          onPressed: () {},
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         );
       },
     );
   }
-}
 
-class ProfessionalCard extends StatelessWidget {
-  final String name;
-  final String specialty;
-  final double rating;
-  final bool isAvailable;
+  String _getMonthName(int month) {
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return months[month - 1];
+  }
 
-  const ProfessionalCard({
-    required this.name,
-    required this.specialty,
-    required this.rating,
-    required this.isAvailable,
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.all(8.0),
-      child: ExpansionTile(
-        leading: CircleAvatar(child: Text(name[0])),
-        title: Text(name),
-        subtitle: Text(specialty),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.star, color: Colors.amber),
-            Text(rating.toString()),
-            const SizedBox(width: 8),
-            Icon(
-              Icons.circle,
-              color: isAvailable ? Colors.green : Colors.grey,
-              size: 12,
-            ),
-          ],
-        ),
+  Widget _buildDetailRow(IconData icon, String text) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Contact Information:'),
-                ListTile(
-                  leading: Icon(Icons.email),
-                  title: Text(
-                    'Email: ${name.toLowerCase().replaceAll(' ', '.')}@wesanebro.com',
-                  ),
-                ),
-                ListTile(
-                  leading: Icon(Icons.phone),
-                  title: const Text('Phone: (555) 123-4567'),
-                ),
-                const SizedBox(height: 8),
-                const Text('About:'),
-                const Text(
-                  'Experienced professional specializing in neurodiversity support...',
-                ),
-                const SizedBox(height: 8),
-                ElevatedButton(
-                  onPressed: () {},
-                  child: const Text('Schedule Appointment'),
-                ),
-              ],
-            ),
-          ),
+          Icon(icon, size: 20),
+          const SizedBox(width: 8),
+          Expanded(child: Text(text)),
         ],
-      ),
-    );
-  }
-}
-
-class CommunityPost extends StatelessWidget {
-  final String author;
-  final String content;
-  final int likes;
-  final int comments;
-
-  const CommunityPost({
-    required this.author,
-    required this.content,
-    required this.likes,
-    required this.comments,
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.all(8.0),
-      child: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(author, style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 8),
-            Text(content),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                const Icon(Icons.favorite, size: 16),
-                Text(' $likes'),
-                const SizedBox(width: 16),
-                const Icon(Icons.comment, size: 16),
-                Text(' $comments'),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class EventCard extends StatelessWidget {
-  final String title;
-  final DateTime date;
-  final String location;
-  final int attendees;
-
-  const EventCard({
-    required this.title,
-    required this.date,
-    required this.location,
-    required this.attendees,
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.all(8.0),
-      child: ListTile(
-        title: Text(title),
-        subtitle: Text('$location • ${attendees.toString()} attending'),
-        trailing: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              date.day.toString(),
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            Text(date.month.toString()),
-          ],
-        ),
       ),
     );
   }
@@ -1909,6 +2094,170 @@ class EmploymentScreen extends StatelessWidget {
         title: Text(title),
         trailing: const Icon(Icons.arrow_forward_ios),
         onTap: () {},
+      ),
+    );
+  }
+}
+
+class ProfessionalCard extends StatelessWidget {
+  final String name;
+  final String specialty;
+  final double rating;
+  final bool isAvailable;
+
+  const ProfessionalCard({
+    required this.name,
+    required this.specialty,
+    required this.rating,
+    required this.isAvailable,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+      child: ExpansionTile(
+        leading: CircleAvatar(
+          backgroundColor: isAvailable ? Colors.green : Colors.grey,
+          child: const Icon(Icons.person, color: Colors.white),
+        ),
+        title: Text(name),
+        subtitle: Text(specialty),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.star, size: 16, color: Colors.amber),
+            Text(' $rating'),
+            const SizedBox(width: 8),
+            ElevatedButton(
+              onPressed: isAvailable ? () {} : null,
+              child: Text(isAvailable ? 'Book' : 'Unavailable'),
+            ),
+          ],
+        ),
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              border: Border(
+                top: BorderSide(color: Theme.of(context).dividerColor),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildDetailRow(Icons.phone, 'Contact: +1 234 567 8900'),
+                const SizedBox(height: 8),
+                _buildDetailRow(
+                  Icons.location_on,
+                  'Clinic: 123 Medical Center, Health Street, City',
+                ),
+                const SizedBox(height: 8),
+                _buildDetailRow(
+                  Icons.access_time,
+                  'Hours: Mon-Fri 9:00 AM - 5:00 PM',
+                ),
+                const SizedBox(height: 8),
+                _buildDetailRow(
+                  Icons.medical_services,
+                  'Specializations: ADHD, Autism, Anxiety',
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    OutlinedButton.icon(
+                      onPressed: () {},
+                      icon: const Icon(Icons.calendar_today),
+                      label: const Text('Schedule'),
+                    ),
+                    OutlinedButton.icon(
+                      onPressed: () {},
+                      icon: const Icon(Icons.message),
+                      label: const Text('Message'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(IconData icon, String text) {
+    return Row(
+      children: [
+        Icon(icon, size: 20),
+        const SizedBox(width: 8),
+        Expanded(child: Text(text)),
+      ],
+    );
+  }
+}
+
+class CommunityPost extends StatelessWidget {
+  final String author;
+  final String content;
+  final int likes;
+  final int comments;
+
+  const CommunityPost({
+    required this.author,
+    required this.content,
+    required this.likes,
+    required this.comments,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                CircleAvatar(
+                  backgroundColor: Theme.of(context).primaryColor,
+                  child: Text(author[0]),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  author,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(content),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.favorite_border),
+                  onPressed: () {},
+                ),
+                Text('$likes'),
+                const SizedBox(width: 16),
+                IconButton(
+                  icon: const Icon(Icons.comment_outlined),
+                  onPressed: () {},
+                ),
+                Text('$comments'),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
