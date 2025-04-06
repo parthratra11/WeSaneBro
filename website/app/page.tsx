@@ -47,7 +47,7 @@ export default function Home() {
             {/* BrainBoot Product */}
             <div className="bg-gray-900 p-4 sm:p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-shadow flex flex-col min-h-[500px] sm:h-[600px]">
               <Image
-                src="/WeSaneBro.jpg"
+                src="/WeSaneBro (1).jpg"
                 alt="KibOS"
                 width={400}
                 height={300}
