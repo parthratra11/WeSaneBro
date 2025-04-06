@@ -98,27 +98,27 @@ export default function SurveyPage() {
   return (
     <>
       <Navigation />
-      <div className="min-h-screen bg-black pt-20">
-        <div className="max-w-4xl mx-auto px-4 py-12">
-          <h1 className="text-5xl font-bold text-red-600 text-center mb-12">
+      <div className="min-h-screen bg-black pt-16 sm:pt-20">
+        <div className="max-w-4xl mx-auto px-4 py-8 sm:py-12">
+          <h1 className="text-3xl sm:text-5xl font-bold text-red-600 text-center mb-8 sm:mb-12">
             Neurodiversity Assessment
           </h1>
-          <form onSubmit={handleSubmit} className="space-y-8">
+          <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
             {questions.map((q) => (
-              <div key={q.id} className="bg-gray-900/50 backdrop-blur-sm p-8 rounded-lg border border-gray-800 hover:border-red-600 transition-all duration-300">
-                <h3 className="text-2xl text-white mb-6">{q.question}</h3>
-                <div className="space-y-4">
+              <div key={q.id} className="bg-gray-900/50 backdrop-blur-sm p-4 sm:p-8 rounded-lg border border-gray-800 hover:border-red-600 transition-all duration-300">
+                <h3 className="text-lg sm:text-2xl text-white mb-4 sm:mb-6">{q.question}</h3>
+                <div className="space-y-2 sm:space-y-4">
                   {q.options.map((option) => (
-                    <label key={option} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-800/50 transition-colors cursor-pointer">
+                    <label key={option} className="flex items-start sm:items-center space-x-3 p-2 sm:p-3 rounded-lg hover:bg-gray-800/50 transition-colors cursor-pointer">
                       <input
                         type="radio"
                         name={`question-${q.id}`}
                         value={option}
                         onChange={(e) => setAnswers({...answers, [q.id]: e.target.value})}
                         required
-                        className="h-5 w-5 text-red-600 border-gray-600 focus:ring-red-600"
+                        className="h-4 w-4 sm:h-5 sm:w-5 mt-1 sm:mt-0 text-red-600 border-gray-600 focus:ring-red-600"
                       />
-                      <span className="text-white text-lg">{option}</span>
+                      <span className="text-sm sm:text-lg text-white">{option}</span>
                     </label>
                   ))}
                 </div>
@@ -126,7 +126,7 @@ export default function SurveyPage() {
             ))}
             <button
               type="submit"
-              className="w-full bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-xl text-lg font-medium transition-all duration-300 hover:scale-105 hover:shadow-xl"
+              className="w-full bg-red-600 hover:bg-red-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl text-base sm:text-lg font-medium transition-all duration-300 hover:scale-105 hover:shadow-xl"
             >
               Submit Survey
             </button>
