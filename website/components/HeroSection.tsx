@@ -1,5 +1,6 @@
 "use client";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 
 const HeroCarousel = dynamic(() => import("./HeroCarousel"), {
   ssr: false,
@@ -20,9 +21,11 @@ export default function HeroSection() {
           Empowering neurodiverse individuals through innovative robotics and
           technology solutions.
         </p>
-        <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-full text-lg font-medium transition-all duration-300 hover:scale-105 hover:shadow-xl opacity-0 animate-fade-in [animation-delay:1000ms]">
-          Discover More
-        </button>
+        <Link href="/survey">
+          <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-full text-lg font-medium transition-all duration-300 hover:scale-105 hover:shadow-xl opacity-0 animate-fade-in [animation-delay:1000ms]">
+            Take Neurodiversity Survey
+          </button>
+        </Link>
       </div>
     </section>
   );

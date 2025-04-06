@@ -25,7 +25,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${chakraPetch.variable} ${inter.variable}`}>
+    <html lang="en" className={`${chakraPetch.variable} ${inter.variable} scroll-smooth`}>
       <body className="font-inter">{children}</body>
     </html>
   );

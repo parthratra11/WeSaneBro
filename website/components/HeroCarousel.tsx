@@ -3,9 +3,9 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 
 const images = [
-  "https://images.pexels.com/photos/8566472/pexels-photo-8566472.jpeg",
-  "https://images.pexels.com/photos/2085831/pexels-photo-2085831.jpeg",
-  "https://images.pexels.com/photos/3183197/pexels-photo-3183197.jpeg",
+  "/ocdcnd.png",
+  "/ChatGPT Image Apr 6, 2025, 09_38_15 PM.png",
+  "/ChatGPT Image Apr 6, 2025, 09_41_43 PM.png",
 ];
 
 const HeroCarousel = () => {
