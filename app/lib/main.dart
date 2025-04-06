@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
+import 'dart:async'; // Add this import for Timer
 import 'dart:ui' show lerpDouble;
+import 'package:video_player/video_player.dart';
+import 'package:flutter/services.dart';
 
 void main() {
   runApp(const MyApp());
@@ -30,7 +33,7 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'BrainBoot',
+      title: 'KibOS',
       theme: ThemeData(
         primaryColor: const Color(0xFF7C4DFF),
         scaffoldBackgroundColor:
@@ -76,7 +79,7 @@ class _MyAppState extends State<MyApp> {
       ),
       home: Scaffold(
         appBar: AppBar(
-          title: const Text('BrainBoot'),
+          title: const Text('KibOS'),
           actions: [
             IconButton(
               icon: const Icon(Icons.sos),
@@ -95,7 +98,7 @@ class _MyAppState extends State<MyApp> {
               const DrawerHeader(
                 decoration: BoxDecoration(color: Color(0xFF7C4DFF)),
                 child: Text(
-                  'BrainBoot Menu',
+                  'KibOS Menu',
                   style: TextStyle(color: Colors.white, fontSize: 24),
                 ),
               ),
@@ -172,7 +175,7 @@ class _MyAppState extends State<MyApp> {
               ),
               ListTile(
                 leading: const Icon(Icons.chat),
-                title: const Text('BrainBot AI Assistant'),
+                title: const Text('Kibo AI Assistant'),
                 onTap: () {},
               ),
             ],
@@ -199,26 +202,30 @@ class _MyAppState extends State<MyApp> {
               icon: Icon(Icons.calendar_today),
               label: 'Schedule',
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.smart_toy),
-              label: 'BrainBot',
-            ),
+            BottomNavigationBarItem(icon: Icon(Icons.smart_toy), label: 'Kibo'),
           ],
         ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () => _showChatBot(),
-          child: Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                colors: [
-                  Theme.of(context).colorScheme.primary,
-                  Theme.of(context).colorScheme.secondary,
-                ],
-              ),
+        floatingActionButton: Container(
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: LinearGradient(
+              colors: [
+                Theme.of(context).colorScheme.primary,
+                Theme.of(context).colorScheme.secondary,
+              ],
             ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: FloatingActionButton(
+            onPressed: () => _showChatBot(),
+            elevation: 0,
+            backgroundColor: Colors.transparent,
             child: const Icon(Icons.chat_bubble, color: Colors.white),
           ),
         ),
@@ -227,7 +234,7 @@ class _MyAppState extends State<MyApp> {
   }
 
   void _handleSOS() {
-    // Implement SOS functionality
+    _showEmergencyOptions();
   }
 
   void _toggleTheme() {
@@ -301,7 +308,7 @@ class _MyAppState extends State<MyApp> {
                             const Icon(Icons.smart_toy),
                             const SizedBox(width: 8),
                             const Text(
-                              'BrainBot Assistant',
+                              'Kibo Assistant',
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -367,6 +374,42 @@ class _MyAppState extends State<MyApp> {
           ),
     );
   }
+
+  void _showEmergencyOptions() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Emergency Options'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.local_police),
+                  title: const Text('Call Police'),
+                  onTap: () {
+                    // Implement police call
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.local_hospital),
+                  title: const Text('Nearby Hospitals'),
+                  onTap: () {
+                    // Implement hospital search
+                  },
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Close'),
+              ),
+            ],
+          ),
+    );
+  }
 }
 
 // Home Screen Widgets
@@ -390,71 +433,215 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-class WelcomeCard extends StatelessWidget {
+class WelcomeCard extends StatefulWidget {
   const WelcomeCard({super.key});
+
+  @override
+  State<WelcomeCard> createState() => _WelcomeCardState();
+}
+
+class _WelcomeCardState extends State<WelcomeCard> {
+  bool _isRecording = false;
+  int _recordingSeconds = 0;
+  Timer? _timer;
+
+  void _startRecording() {
+    setState(() {
+      _isRecording = true;
+      _recordingSeconds = 30;
+    });
+
+    _showEmergencyOptions(context); // Show emergency options immediately
+
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      setState(() {
+        if (_recordingSeconds > 0) {
+          _recordingSeconds--;
+        } else {
+          _stopRecording();
+        }
+      });
+    });
+  }
+
+  void _stopRecording() {
+    _timer?.cancel();
+    setState(() {
+      _isRecording = false;
+    });
+  }
+
+  void _showEmergencyOptions(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Prevent dismissing by tapping outside
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Emergency Options'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (_isRecording)
+                  Text('Recording: $_recordingSeconds seconds remaining'),
+                const SizedBox(height: 8),
+                ListTile(
+                  leading: const Icon(Icons.local_police),
+                  title: const Text('Call Police'),
+                  onTap: () {
+                    // Implement police call
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.local_hospital),
+                  title: const Text('Nearby Hospitals'),
+                  onTap: () {
+                    // Implement hospital search
+                  },
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  _stopRecording();
+                  Navigator.pop(context);
+                },
+                child: const Text('Stop & Close'),
+              ),
+            ],
+          ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          gradient: LinearGradient(
-            colors: [
-              Theme.of(context).colorScheme.primary,
-              Theme.of(context).colorScheme.secondary,
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Welcome back!',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
+      child: Row(
+        children: [
+          Expanded(
+            flex: 65, // Increased from 60
+            child: Container(
+              height: 160, // Added fixed height
+              decoration: BoxDecoration(
+                borderRadius: const BorderRadius.horizontal(
+                  left: Radius.circular(16),
+                ),
+                gradient: LinearGradient(
+                  colors: [
+                    Theme.of(context).colorScheme.primary,
+                    Theme.of(context).colorScheme.secondary,
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
               ),
-              const SizedBox(height: 8),
-              Text(
-                'Your daily progress is on track.',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Colors.white.withOpacity(0.9),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Stack(
-                alignment: Alignment.center,
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: LinearProgressIndicator(
-                      value: 0.7,
-                      minHeight: 8,
-                      backgroundColor: Colors.white.withOpacity(0.2),
-                      valueColor: const AlwaysStoppedAnimation<Color>(
-                        Colors.white,
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Welcome back!',
+                      style: Theme.of(
+                        context,
+                      ).textTheme.headlineSmall?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                  ),
-                  Text(
-                    '70%',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
+                    const SizedBox(height: 8),
+                    Text(
+                      'Your daily progress is on track.',
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: Colors.white.withOpacity(0.9),
+                      ),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 12),
+                    Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: LinearProgressIndicator(
+                            value: 0.7,
+                            minHeight: 12,
+                            backgroundColor: Colors.white.withOpacity(0.2),
+                            valueColor: const AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
+                          ),
+                        ),
+                        const Text(
+                          '70%',
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ],
+            ),
           ),
-        ),
+          Expanded(
+            flex: 35, // Decreased from 40
+            child: Container(
+              height: 160, // Changed from 180
+              decoration: BoxDecoration(
+                color: Colors.red.shade700,
+                borderRadius: const BorderRadius.horizontal(
+                  right: Radius.circular(16),
+                ),
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: _isRecording ? null : _startRecording,
+                  borderRadius: const BorderRadius.horizontal(
+                    right: Radius.circular(16),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        _isRecording
+                            ? Icons.fiber_manual_record
+                            : Icons.warning_rounded,
+                        color: Colors.white,
+                        size: 48,
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        _isRecording ? '$_recordingSeconds s' : 'SOS',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      if (_isRecording) ...[
+                        const SizedBox(height: 6),
+                        const Text(
+                          'Recording...',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -494,7 +681,7 @@ class TasksSection extends StatelessWidget {
   }
 }
 
-class TaskItem extends StatelessWidget {
+class TaskItem extends StatefulWidget {
   final String title;
   final String time;
   final bool isCompleted;
@@ -507,36 +694,77 @@ class TaskItem extends StatelessWidget {
   });
 
   @override
+  State<TaskItem> createState() => _TaskItemState();
+}
+
+class _TaskItemState extends State<TaskItem> {
+  late bool isCompleted;
+
+  @override
+  void initState() {
+    super.initState();
+    isCompleted = widget.isCompleted;
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 0),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color:
-                isCompleted
-                    ? Colors.green.withOpacity(0.1)
-                    : Colors.grey.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        onTap: () => setState(() => isCompleted = !isCompleted),
+        child: ListTile(
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 8,
           ),
-          child: Icon(
-            isCompleted ? Icons.check_circle : Icons.circle_outlined,
-            color: isCompleted ? Colors.green : Colors.grey,
+          leading: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color:
+                  isCompleted
+                      ? Colors.green.withOpacity(0.1)
+                      : Colors.grey.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              isCompleted ? Icons.check_circle : Icons.circle_outlined,
+              color: isCompleted ? Colors.green : Colors.grey,
+            ),
           ),
-        ),
-        title: Text(
-          title,
-          style: TextStyle(
-            decoration: isCompleted ? TextDecoration.lineThrough : null,
-            color: isCompleted ? Colors.grey : null,
+          title: Text(
+            widget.title,
+            style: TextStyle(
+              decoration: isCompleted ? TextDecoration.lineThrough : null,
+              color: isCompleted ? Colors.grey : null,
+            ),
           ),
-        ),
-        subtitle: Text(time),
-        trailing: IconButton(
-          icon: const Icon(Icons.more_vert),
-          onPressed: () {},
+          subtitle: Text(widget.time),
+          trailing: PopupMenuButton(
+            icon: const Icon(Icons.more_vert),
+            itemBuilder:
+                (context) => [
+                  PopupMenuItem(
+                    child: ListTile(
+                      leading: const Icon(Icons.edit),
+                      title: const Text('Edit'),
+                      dense: true,
+                    ),
+                    onTap: () {
+                      /* Edit functionality */
+                    },
+                  ),
+                  PopupMenuItem(
+                    child: ListTile(
+                      leading: const Icon(Icons.delete),
+                      title: const Text('Delete'),
+                      dense: true,
+                    ),
+                    onTap: () {
+                      /* Delete functionality */
+                    },
+                  ),
+                ],
+          ),
         ),
       ),
     );
@@ -667,11 +895,34 @@ class ResourceCard extends StatelessWidget {
     super.key,
   });
 
+  void _handleNavigation(BuildContext context) {
+    switch (title) {
+      case 'Educational':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const EducationScreen()),
+        );
+        break;
+      case 'Employment':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const EmploymentScreen()),
+        );
+        break;
+      case 'Community':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const CommunityScreen()),
+        );
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Card(
       child: InkWell(
-        onTap: () {},
+        onTap: () => _handleNavigation(context),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -830,165 +1081,169 @@ class CommunityScreen extends StatelessWidget {
   }
 
   Widget _buildEventsList() {
+    final events = [
+      {
+        'title': 'Neurodiversity Career Fair',
+        'date': DateTime.now().add(const Duration(days: 2)),
+        'location': 'City Convention Center',
+        'attendees': 45,
+        'description':
+            'Connect with employers who value neurodiversity in the workplace. Meet recruiters from tech, healthcare, and creative industries.',
+        'time': '10:00 AM - 4:00 PM',
+        'organizer': 'WeSaneBro Foundation',
+        'requirements': 'Bring your resume and portfolio',
+        'contact': 'events@wesanebro.org',
+      },
+      {
+        'title': 'Sensory-Friendly Movie Night',
+        'date': DateTime.now().add(const Duration(days: 4)),
+        'location': 'Inclusive Cinema Hall',
+        'attendees': 30,
+        'description':
+            'Enjoy a movie screening in a sensory-friendly environment with adjusted sound and lighting.',
+        'time': '6:30 PM - 9:00 PM',
+        'organizer': 'Community Arts Group',
+        'requirements': 'Comfortable seating provided',
+        'contact': 'cinema@wesanebro.org',
+      },
+      {
+        'title': 'Skills Development Workshop',
+        'date': DateTime.now().add(const Duration(days: 6)),
+        'location': 'Learning Center',
+        'attendees': 25,
+        'description':
+            'Interactive workshop focusing on communication skills and workplace strategies.',
+        'time': '2:00 PM - 5:00 PM',
+        'organizer': 'Skills Development Team',
+        'requirements': 'Notebook and writing materials',
+        'contact': 'workshops@wesanebro.org',
+      },
+      {
+        'title': 'Support Group Meeting',
+        'date': DateTime.now().add(const Duration(days: 8)),
+        'location': 'Community Center',
+        'attendees': 20,
+        'description':
+            'Monthly support group meeting for sharing experiences and coping strategies.',
+        'time': '7:00 PM - 8:30 PM',
+        'organizer': 'Support Network',
+        'requirements': 'Open to all members',
+        'contact': 'support@wesanebro.org',
+      },
+      {
+        'title': 'Tech Networking Mixer',
+        'date': DateTime.now().add(const Duration(days: 10)),
+        'location': 'Tech Hub',
+        'attendees': 35,
+        'description':
+            'Casual networking event for tech professionals and enthusiasts.',
+        'time': '5:30 PM - 7:30 PM',
+        'organizer': 'Tech Community',
+        'requirements': 'Business casual attire',
+        'contact': 'tech@wesanebro.org',
+      },
+    ];
+
     return ListView.builder(
-      itemCount: 5,
+      itemCount: events.length,
       itemBuilder: (context, index) {
-        return EventCard(
-          title: 'Neurodiversity Meetup ${index + 1}',
-          date: DateTime.now().add(Duration(days: index * 2)),
-          location: 'Community Center',
-          attendees: 15 + index,
+        final event = events[index];
+        return Card(
+          margin: const EdgeInsets.all(8.0),
+          child: ExpansionTile(
+            title: Text(event['title'] as String),
+            subtitle: Text(
+              '${event['location']} • ${(event['attendees'] as int).toString()} attending',
+            ),
+            trailing: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  (event['date'] as DateTime).day.toString(),
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text(_getMonthName((event['date'] as DateTime).month)),
+              ],
+            ),
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Details',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 8),
+                    _buildDetailRow(Icons.access_time, event['time'] as String),
+                    _buildDetailRow(
+                      Icons.description,
+                      event['description'] as String,
+                    ),
+                    _buildDetailRow(
+                      Icons.person,
+                      'Organizer: ${event['organizer']}',
+                    ),
+                    _buildDetailRow(
+                      Icons.list,
+                      'Requirements: ${event['requirements']}',
+                    ),
+                    _buildDetailRow(Icons.email, event['contact'] as String),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        ElevatedButton.icon(
+                          icon: const Icon(Icons.calendar_today),
+                          label: const Text('RSVP'),
+                          onPressed: () {},
+                        ),
+                        OutlinedButton.icon(
+                          icon: const Icon(Icons.share),
+                          label: const Text('Share'),
+                          onPressed: () {},
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         );
       },
     );
   }
-}
 
-class ProfessionalCard extends StatelessWidget {
-  final String name;
-  final String specialty;
-  final double rating;
-  final bool isAvailable;
+  String _getMonthName(int month) {
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return months[month - 1];
+  }
 
-  const ProfessionalCard({
-    required this.name,
-    required this.specialty,
-    required this.rating,
-    required this.isAvailable,
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.all(8.0),
-      child: ExpansionTile(
-        leading: CircleAvatar(child: Text(name[0])),
-        title: Text(name),
-        subtitle: Text(specialty),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.star, color: Colors.amber),
-            Text(rating.toString()),
-            const SizedBox(width: 8),
-            Icon(
-              Icons.circle,
-              color: isAvailable ? Colors.green : Colors.grey,
-              size: 12,
-            ),
-          ],
-        ),
+  Widget _buildDetailRow(IconData icon, String text) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Contact Information:'),
-                ListTile(
-                  leading: Icon(Icons.email),
-                  title: Text(
-                    'Email: ${name.toLowerCase().replaceAll(' ', '.')}@brainboot.com',
-                  ),
-                ),
-                ListTile(
-                  leading: Icon(Icons.phone),
-                  title: const Text('Phone: (555) 123-4567'),
-                ),
-                const SizedBox(height: 8),
-                const Text('About:'),
-                const Text(
-                  'Experienced professional specializing in neurodiversity support...',
-                ),
-                const SizedBox(height: 8),
-                ElevatedButton(
-                  onPressed: () {},
-                  child: const Text('Schedule Appointment'),
-                ),
-              ],
-            ),
-          ),
+          Icon(icon, size: 20),
+          const SizedBox(width: 8),
+          Expanded(child: Text(text)),
         ],
-      ),
-    );
-  }
-}
-
-class CommunityPost extends StatelessWidget {
-  final String author;
-  final String content;
-  final int likes;
-  final int comments;
-
-  const CommunityPost({
-    required this.author,
-    required this.content,
-    required this.likes,
-    required this.comments,
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.all(8.0),
-      child: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(author, style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 8),
-            Text(content),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                const Icon(Icons.favorite, size: 16),
-                Text(' $likes'),
-                const SizedBox(width: 16),
-                const Icon(Icons.comment, size: 16),
-                Text(' $comments'),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class EventCard extends StatelessWidget {
-  final String title;
-  final DateTime date;
-  final String location;
-  final int attendees;
-
-  const EventCard({
-    required this.title,
-    required this.date,
-    required this.location,
-    required this.attendees,
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.all(8.0),
-      child: ListTile(
-        title: Text(title),
-        subtitle: Text('$location • ${attendees.toString()} attending'),
-        trailing: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              date.day.toString(),
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            Text(date.month.toString()),
-          ],
-        ),
       ),
     );
   }
@@ -1169,118 +1424,169 @@ class BrainBotScreen extends StatefulWidget {
   State<BrainBotScreen> createState() => _BrainBotScreenState();
 }
 
-class _BrainBotScreenState extends State<BrainBotScreen>
-    with SingleTickerProviderStateMixin {
+class _BrainBotScreenState extends State<BrainBotScreen> {
   bool _isPoweredOn = false;
-  late AnimationController _eyeController;
-  late Point _targetPoint;
-  Point _currentEyePosition = const Point(0.5, 0.5);
-  final Random _random = Random();
+  late VideoPlayerController _videoController;
 
   @override
   void initState() {
     super.initState();
-    _targetPoint = _getRandomPoint();
-    _eyeController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    )..addListener(() {
-      setState(() {
-        _currentEyePosition = Point(
-          lerpDouble(_currentEyePosition.x, _targetPoint.x, 0.02) ?? 0.5,
-          lerpDouble(_currentEyePosition.y, _targetPoint.y, 0.02) ?? 0.5,
-        );
-      });
-      if (_eyeController.value >= 1.0) {
-        _targetPoint = _getRandomPoint();
-        _eyeController.reset();
-        _eyeController.forward();
-      }
-    });
-  }
-
-  Point _getRandomPoint() {
-    return Point(
-      0.2 + _random.nextDouble() * 0.6,
-      0.2 + _random.nextDouble() * 0.6,
-    );
+    _videoController =
+        VideoPlayerController.asset('assets/videos/kibos.mp4')
+          ..initialize().then((_) {
+            setState(() {});
+          })
+          ..setLooping(true);
   }
 
   @override
   void dispose() {
-    _eyeController.dispose();
+    _videoController.dispose();
+    _resetOrientation();
     super.dispose();
   }
 
-  void _togglePower() {
+  Future<void> _enterFullScreen() async {
+    await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    await SystemChrome.setPreferredOrientations([
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
+  }
+
+  void _resetOrientation() {
+    SystemChrome.setPreferredOrientations(DeviceOrientation.values);
+    SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.manual,
+      overlays: SystemUiOverlay.values,
+    );
+  }
+
+  void _togglePower() async {
+    if (!_isPoweredOn) {
+      await _enterFullScreen();
+    } else {
+      _resetOrientation();
+    }
+
     setState(() {
       _isPoweredOn = !_isPoweredOn;
       if (_isPoweredOn) {
-        _eyeController.forward();
+        _videoController.play();
       } else {
-        _eyeController.stop();
+        _videoController.pause();
       }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        if (!_isPoweredOn) ...[
-          Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ElevatedButton(
-                  onPressed: _togglePower,
-                  style: ElevatedButton.styleFrom(
-                    shape: const CircleBorder(),
-                    padding: const EdgeInsets.all(48),
-                    backgroundColor: Theme.of(context).primaryColor,
-                  ),
-                  child: const Icon(
-                    Icons.power_settings_new,
-                    size: 64,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 32),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+    if (_isPoweredOn) {
+      return WillPopScope(
+        onWillPop: () async {
+          _togglePower();
+          return false;
+        },
+        child: Scaffold(
+          backgroundColor: Colors.black,
+          body: Stack(
+            children: [
+              Positioned.fill(
+                child:
+                    _videoController.value.isInitialized
+                        ? SizedBox.expand(
+                          child: FittedBox(
+                            fit: BoxFit.cover,
+                            child: SizedBox(
+                              width: _videoController.value.size.width,
+                              height: _videoController.value.size.height,
+                              child: VideoPlayer(_videoController),
+                            ),
+                          ),
+                        )
+                        : const Center(child: CircularProgressIndicator()),
+              ),
+              Positioned(
+                top: 16,
+                right: 16,
+                child: Row(
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.settings, size: 32),
-                      iconSize: 32,
+                      icon: const Icon(
+                        Icons.settings,
+                        size: 32,
+                        color: Colors.white,
+                      ),
                       onPressed: () {},
                       tooltip: 'Settings',
-                      padding: const EdgeInsets.all(16),
                     ),
-                    const SizedBox(width: 32),
                     IconButton(
-                      icon: const Icon(Icons.info_outline, size: 32),
-                      iconSize: 32,
+                      icon: const Icon(
+                        Icons.info_outline,
+                        size: 32,
+                        color: Colors.white,
+                      ),
                       onPressed: () {},
                       tooltip: 'Info',
-                      padding: const EdgeInsets.all(16),
+                    ),
+                    IconButton(
+                      icon: const Icon(
+                        Icons.power_settings_new,
+                        color: Colors.white,
+                        size: 32,
+                      ),
+                      onPressed: _togglePower,
                     ),
                   ],
                 ),
-              ],
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Return power button UI with additional buttons
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          ElevatedButton(
+            onPressed: _togglePower,
+            style: ElevatedButton.styleFrom(
+              shape: const CircleBorder(),
+              padding: const EdgeInsets.all(48),
+              backgroundColor: Theme.of(context).primaryColor,
             ),
+            child: const Icon(
+              Icons.power_settings_new,
+              size: 64,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 32),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.settings, size: 32),
+                iconSize: 32,
+                onPressed: () {},
+                tooltip: 'Settings',
+                padding: const EdgeInsets.all(16),
+              ),
+              const SizedBox(width: 32),
+              IconButton(
+                icon: const Icon(Icons.info_outline, size: 32),
+                iconSize: 32,
+                onPressed: () {},
+                tooltip: 'Info',
+                padding: const EdgeInsets.all(16),
+              ),
+            ],
           ),
         ],
-        if (_isPoweredOn)
-          Container(
-            color: Colors.black,
-            child: Center(
-              child: PixelatedEyes(
-                position: _currentEyePosition,
-                color: Colors.cyan,
-              ),
-            ),
-          ),
-      ],
+      ),
     );
   }
 }
@@ -1662,6 +1968,296 @@ class EducationalResourcesScreen extends StatelessWidget {
         subtitle: Text(description),
         trailing: const Icon(Icons.arrow_forward),
         onTap: () {},
+      ),
+    );
+  }
+}
+
+class EducationScreen extends StatelessWidget {
+  const EducationScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Educational Resources')),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          _buildCourseCard(
+            'Introduction to Neurodiversity',
+            'Learn about different types of neurodiversity',
+            '2 hours',
+            4.5,
+          ),
+          _buildCourseCard(
+            'Workplace Strategies',
+            'Effective strategies for workplace success',
+            '1.5 hours',
+            4.8,
+          ),
+          _buildCourseCard(
+            'Social Skills Development',
+            'Improve social interaction skills',
+            '3 hours',
+            4.6,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCourseCard(
+    String title,
+    String description,
+    String duration,
+    double rating,
+  ) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: ListTile(
+        contentPadding: const EdgeInsets.all(16),
+        title: Text(title),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 8),
+            Text(description),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                const Icon(Icons.access_time, size: 16),
+                const SizedBox(width: 4),
+                Text(duration),
+                const Spacer(),
+                const Icon(Icons.star, size: 16, color: Colors.amber),
+                const SizedBox(width: 4),
+                Text(rating.toString()),
+              ],
+            ),
+          ],
+        ),
+        trailing: ElevatedButton(onPressed: () {}, child: const Text('Start')),
+      ),
+    );
+  }
+}
+
+class EmploymentScreen extends StatelessWidget {
+  const EmploymentScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Employment Resources')),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          _buildJobCategory('Tech & IT', Icons.computer, 42),
+          _buildJobCategory('Healthcare', Icons.local_hospital, 28),
+          _buildJobCategory('Education', Icons.school, 15),
+          _buildJobCategory('Creative Arts', Icons.palette, 23),
+          const SizedBox(height: 24),
+          const Text(
+            'Career Resources',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 16),
+          _buildResourceCard('Resume Building Workshop', Icons.description),
+          _buildResourceCard('Interview Preparation', Icons.people),
+          _buildResourceCard(
+            'Workplace Accommodations Guide',
+            Icons.accessibility_new,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildJobCategory(String title, IconData icon, int jobCount) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: ListTile(
+        leading: Icon(icon, size: 32),
+        title: Text(title),
+        subtitle: Text('$jobCount jobs available'),
+        trailing: const Icon(Icons.arrow_forward_ios),
+        onTap: () {},
+      ),
+    );
+  }
+
+  Widget _buildResourceCard(String title, IconData icon) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: ListTile(
+        leading: Icon(icon),
+        title: Text(title),
+        trailing: const Icon(Icons.arrow_forward_ios),
+        onTap: () {},
+      ),
+    );
+  }
+}
+
+class ProfessionalCard extends StatelessWidget {
+  final String name;
+  final String specialty;
+  final double rating;
+  final bool isAvailable;
+
+  const ProfessionalCard({
+    required this.name,
+    required this.specialty,
+    required this.rating,
+    required this.isAvailable,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+      child: ExpansionTile(
+        leading: CircleAvatar(
+          backgroundColor: isAvailable ? Colors.green : Colors.grey,
+          child: const Icon(Icons.person, color: Colors.white),
+        ),
+        title: Text(name),
+        subtitle: Text(specialty),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.star, size: 16, color: Colors.amber),
+            Text(' $rating'),
+            const SizedBox(width: 8),
+            ElevatedButton(
+              onPressed: isAvailable ? () {} : null,
+              child: Text(isAvailable ? 'Book' : 'Unavailable'),
+            ),
+          ],
+        ),
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              border: Border(
+                top: BorderSide(color: Theme.of(context).dividerColor),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildDetailRow(Icons.phone, 'Contact: +1 234 567 8900'),
+                const SizedBox(height: 8),
+                _buildDetailRow(
+                  Icons.location_on,
+                  'Clinic: 123 Medical Center, Health Street, City',
+                ),
+                const SizedBox(height: 8),
+                _buildDetailRow(
+                  Icons.access_time,
+                  'Hours: Mon-Fri 9:00 AM - 5:00 PM',
+                ),
+                const SizedBox(height: 8),
+                _buildDetailRow(
+                  Icons.medical_services,
+                  'Specializations: ADHD, Autism, Anxiety',
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    OutlinedButton.icon(
+                      onPressed: () {},
+                      icon: const Icon(Icons.calendar_today),
+                      label: const Text('Schedule'),
+                    ),
+                    OutlinedButton.icon(
+                      onPressed: () {},
+                      icon: const Icon(Icons.message),
+                      label: const Text('Message'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(IconData icon, String text) {
+    return Row(
+      children: [
+        Icon(icon, size: 20),
+        const SizedBox(width: 8),
+        Expanded(child: Text(text)),
+      ],
+    );
+  }
+}
+
+class CommunityPost extends StatelessWidget {
+  final String author;
+  final String content;
+  final int likes;
+  final int comments;
+
+  const CommunityPost({
+    required this.author,
+    required this.content,
+    required this.likes,
+    required this.comments,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                CircleAvatar(
+                  backgroundColor: Theme.of(context).primaryColor,
+                  child: Text(author[0]),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  author,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(content),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.favorite_border),
+                  onPressed: () {},
+                ),
+                Text('$likes'),
+                const SizedBox(width: 16),
+                IconButton(
+                  icon: const Icon(Icons.comment_outlined),
+                  onPressed: () {},
+                ),
+                Text('$comments'),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
